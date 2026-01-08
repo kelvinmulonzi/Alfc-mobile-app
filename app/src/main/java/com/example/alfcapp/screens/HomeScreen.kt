@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.alfcapp.screens.BibleScreen // Ensure you have implemented this screen
+import com.example.alfcapp.screens.NotesScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,8 +76,9 @@ fun LandingPage() {
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             when (currentScreen) {
-                "home" -> HomeContent()
+                "home" -> HomeContent(onNavigate = { screen -> currentScreen = screen })
                 "bible" -> BibleScreen() // Displays the Bible API implementation
+                "notes" -> NotesScreen()
                 else -> {
                     // Placeholder for Media and Give screens
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -89,7 +91,7 @@ fun LandingPage() {
 }
 
 @Composable
-fun HomeContent() {
+fun HomeContent(onNavigate: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -102,7 +104,7 @@ fun HomeContent() {
         }
 
         item {
-            QuickActionGrid()
+            QuickActionGrid(onNavigate)
         }
 
         item {
@@ -158,19 +160,19 @@ fun MediaHeroSection() {
 }
 
 @Composable
-fun QuickActionGrid() {
+fun QuickActionGrid(onNavigate: (String) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ActionIconButton(Icons.Default.VolunteerActivism, "Give", Modifier.weight(1f))
-        ActionIconButton(Icons.Default.EditNote, "Notes", Modifier.weight(1f))
+        ActionIconButton(Icons.Default.EditNote, "Notes", Modifier.weight(1f), onClick = { onNavigate("notes") })
         ActionIconButton(Icons.Default.Event, "Events", Modifier.weight(1f))
     }
 }
 
 @Composable
-fun ActionIconButton(icon: ImageVector, label: String, modifier: Modifier) {
+fun ActionIconButton(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit = {}) {
     ElevatedCard(
         modifier = modifier,
-        onClick = { /* Action */ },
+        onClick = onClick,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(
