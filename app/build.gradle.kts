@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 val localProperties = Properties()
@@ -27,6 +28,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val apiKey = localProperties.getProperty("BIBLE_API_KEY") ?: project.findProperty("BIBLE_API_KEY") ?: ""
         buildConfigField("String", "BIBLE_API_KEY", "\"$apiKey\"")
+
+        val backendBaseUrl = localProperties.getProperty("BACKEND_BASE_URL")
+            ?: project.findProperty("BACKEND_BASE_URL")
+            ?: "http://192.168.254.201:8080/"
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
     }
 
     buildTypes {
@@ -64,8 +70,21 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Live Streaming (RTMP) & Permissions
+    implementation("com.github.pedroSG94.RootEncoder:library:2.5.2")
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
