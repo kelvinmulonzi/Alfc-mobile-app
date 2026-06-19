@@ -20,18 +20,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.alfcapp.data.livestream.LiveStreamRepository
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.pedro.common.ConnectChecker
 import com.pedro.library.rtmp.RtmpCamera1
 import com.pedro.library.view.OpenGlView
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AdminLiveStreamScreen() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val prefs = remember { context.getSharedPreferences("ALFC_PREFS", Context.MODE_PRIVATE) }
     var isAuthenticated by remember { mutableStateOf(false) }
-    var passwordInput by remember { mutableStateOf("") }
+    // Pre-fill with a previously validated token so admins don't retype it each time.
+    var tokenInput by remember { mutableStateOf(prefs.getString("ADMIN_TOKEN", "") ?: "") }
+    var isValidating by remember { mutableStateOf(false) }
 
     if (!isAuthenticated) {
         Column(
@@ -40,23 +46,49 @@ fun AdminLiveStreamScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Admin Access Required", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Enter the church admin token to start a broadcast.",
+                style = MaterialTheme.typography.bodyMedium
+            )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
-                value = passwordInput,
-                onValueChange = { passwordInput = it },
-                label = { Text("Enter Password") },
+                value = tokenInput,
+                onValueChange = { tokenInput = it },
+                label = { Text("Admin Token") },
                 singleLine = true,
+                enabled = !isValidating,
                 visualTransformation = PasswordVisualTransformation()
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                if (passwordInput == "admin123") {
-                    isAuthenticated = true
-                } else {
-                    Toast.makeText(context, "Incorrect Password", Toast.LENGTH_SHORT).show()
+            Button(
+                enabled = !isValidating && tokenInput.isNotBlank(),
+                onClick = {
+                    val token = tokenInput.trim()
+                    isValidating = true
+                    scope.launch {
+                        // The backend's admin filter accepts the request only when the
+                        // token matches `app.admin-token`, so a success means it's valid.
+                        val result = LiveStreamRepository.validateAdminToken(token)
+                        isValidating = false
+                        if (result.isSuccess) {
+                            prefs.edit().putString("ADMIN_TOKEN", token).apply()
+                            isAuthenticated = true
+                        } else {
+                            Toast.makeText(context, "Invalid admin token", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
-            }) {
-                Text("Login")
+            ) {
+                if (isValidating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Login")
+                }
             }
         }
     } else {

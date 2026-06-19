@@ -29,6 +29,16 @@ android {
         val apiKey = localProperties.getProperty("BIBLE_API_KEY") ?: project.findProperty("BIBLE_API_KEY") ?: ""
         buildConfigField("String", "BIBLE_API_KEY", "\"$apiKey\"")
 
+        val youtubeApiKey = localProperties.getProperty("YOUTUBE_API_KEY")
+            ?: project.findProperty("YOUTUBE_API_KEY")
+            ?: ""
+        buildConfigField("String", "YOUTUBE_API_KEY", "\"$youtubeApiKey\"")
+
+        val youtubeChannelId = localProperties.getProperty("YOUTUBE_CHANNEL_ID")
+            ?: project.findProperty("YOUTUBE_CHANNEL_ID")
+            ?: "UCL_RqdXTMyCyThK8Ub0iqXw"
+        buildConfigField("String", "YOUTUBE_CHANNEL_ID", "\"$youtubeChannelId\"")
+
         val backendBaseUrl = localProperties.getProperty("BACKEND_BASE_URL")
             ?: project.findProperty("BACKEND_BASE_URL")
             ?: "http://192.168.254.201:8080/"
@@ -44,6 +54,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -69,6 +80,11 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // STOMP-over-WebSocket client for real-time chat
+    implementation("org.hildan.krossbow:krossbow-stomp-core:9.0.0")
+    implementation("org.hildan.krossbow:krossbow-websocket-okhttp:9.0.0")
 
     // Live Streaming (RTMP) & Permissions
     implementation("com.github.pedroSG94.RootEncoder:library:2.5.2")
@@ -82,6 +98,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Core library desugaring (enables java.time on API 24/25)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 
 
 

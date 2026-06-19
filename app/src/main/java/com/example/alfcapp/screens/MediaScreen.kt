@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
+import com.example.alfcapp.BuildConfig
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
@@ -94,8 +95,8 @@ fun MediaScreen() {
     var isCurrentLive by remember { mutableStateOf(false) }
     var refreshKey by remember { mutableStateOf(0) }
 
-    val apiKey = "AIzaSyDda7HNFvzGXGZMH8LJhR3pLhGE9RA9O1o"
-    val channelId = "UCL_RqdXTMyCyThK8Ub0iqXw"
+    val apiKey = BuildConfig.YOUTUBE_API_KEY
+    val channelId = BuildConfig.YOUTUBE_CHANNEL_ID
 
     val apiService = remember {
         Retrofit.Builder()
@@ -142,7 +143,7 @@ fun MediaScreen() {
 
             when {
                 isLoading -> item { LoadingState() }
-                error != null -> item { ErrorState(onRetry = { refreshKey++ }) }
+                error != null -> item { ErrorState(message = error, onRetry = { refreshKey++ }) }
                 videos.isEmpty() -> item { EmptyState() }
                 else -> {
                     if (liveVideo != null) {
@@ -478,7 +479,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun ErrorState(onRetry: () -> Unit) {
+private fun ErrorState(message: String?, onRetry: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -507,9 +508,10 @@ private fun ErrorState(onRetry: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Check your connection and try again.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = message ?: "Check your connection and try again.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             Spacer(Modifier.height(16.dp))
             Button(onClick = onRetry) {
